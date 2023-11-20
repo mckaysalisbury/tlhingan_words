@@ -71,6 +71,7 @@
             }
             const counts = {};
             function update_counter(counter) {
+                // This is not thread safe, but it's good enough for what I need.
                 counts[counter]++;
                 document.getElementById('status').innerHTML = "";
                 ListBoy.RenderTo(counts, 'status');
