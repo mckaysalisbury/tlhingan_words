@@ -41,18 +41,50 @@
             const files = {
                 "b": "01",
                 "ch": "02",
+                "D": "03",
+                "gh": "04",
+                "H": "05",
+                "j": "06",
+                "l": "07",
+                "m": "08",
+                "n": "09",
+                "ng": "10",
+                "p": "11",
+                "q": "12",
+                "Q": "13",
+                "r": "14",
+                "S": "15",
+                "t": "16",
+                "tlh": "17",
+                "v": "18",
+                "w": "19",
+                "y": "20",
+                "a": "21",
+                "e": "22",
+                "I": "23",
+                "o": "24",
+                "u": "25",
+                "suffixes": "26",
+                "extra": "27",
+                "examples": "28",
+                "footer": "29",
             }
-            const counts = {
-                "started": 0,
-                "downloaded": 0,
-                "processed": 0,
-            }
+            const counts = {};
             function update_counter(counter) {
                 counts[counter]++;
+                document.getElementById('status').innerHTML = "";
                 ListBoy.RenderTo(counts, 'status');
             }
 
+            function display() {
+                document.getElementById('words').innerHTML = "";
+                ListBoy.RenderTo(words, "words");
+            }
+
             function processFiles() {
+                counts.started = 0;
+                counts.downloaded = 0;
+                counts.processed = 0;
                 for (const letter in files) {
                     const xhr = new XMLHttpRequest();
                     xhr.onload = () => {
@@ -77,6 +109,7 @@
     </head>
     <body>
         <button onclick="processFiles();">Process</button>
-        <div id="status"></div>
+        <button onclick="display();">Display</button>
+        <div id="status"></div><div id="words"></div>
     </body>
 </html>
