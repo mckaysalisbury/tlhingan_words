@@ -1,0 +1,82 @@
+<html>
+    <head>
+        <script src="https://github.mckaysalisbury.com/ListBoy/ListBoy.js"></script>
+        <script>
+            const words = {};
+            function parsePiece(xhr) {
+                // Even still, It should be this easy
+                // const document = xhr.responseXML;
+                // But they're not valid XML documents, so we need to make it work
+                const parser = new DOMParser();
+                const xml = parser.parseFromString(`<document>${xhr.responseText}</document>`, "text/xml"); // So I have to wrap it
+                return xml;
+            }
+
+            function extractWords(xml) {
+                const tables = xml.getElementsByTagName("table");
+                for (const table of tables) {
+                    const columns = table.getElementsByTagName("column");
+                    let entry_name = null;
+                    let definition = null;
+                    for (column of columns) {
+                        const name = column.getAttribute("name");
+                        switch (name) {
+                            case "entry_name":
+                                entry_name = column.getInnerHTML();
+                                break;
+                            case "definition":
+                                definition = column.getInnerHTML();
+                                break;
+                            default:
+                                // do nothing, we don't care about this
+                        }
+                        // if (entry_name && definition) { // optimization
+                        //     break;
+                        // }
+                    }
+                    words[entry_name] = definition;
+                }
+            }
+
+            const files = {
+                "b": "01",
+                "ch": "02",
+            }
+            const counts = {
+                "started": 0,
+                "downloaded": 0,
+                "processed": 0,
+            }
+            function update_counter(counter) {
+                counts[counter]++;
+                ListBoy.RenderTo(counts, 'status');
+            }
+
+            function processFiles() {
+                for (const letter in files) {
+                    const xhr = new XMLHttpRequest();
+                    xhr.onload = () => {
+                        update_counter("downloaded");
+                        const xml = parsePiece(xhr);
+                        extractWords(xml);
+                        update_counter("processed");
+                    };
+
+                    xhr.onerror = () => {
+                        alert("Error while getting XML.");
+                    };
+
+                    const number = files[letter];
+                    xhr.open("GET", `https://raw.githubusercontent.com/De7vID/klingon-assistant-data/master/mem-${number}-${letter}.xml`, true);
+                    update_counter("started");
+                    // xhr.responseType = "document"; These aren't valid XML documents :(
+                    xhr.send();
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <button onclick="processFiles();">Process</button>
+        <div id="status"></div>
+    </body>
+</html>

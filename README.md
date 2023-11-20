@@ -1,2 +1,2 @@
-# tlhingan_words
+# tlhIngan words
 tlhIngan word analysis
