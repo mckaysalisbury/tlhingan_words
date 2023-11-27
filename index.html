@@ -179,7 +179,9 @@
 
             function display_missing() {
                 document.getElementById('words').innerHTML = "";
-                ListBoy.RenderTo(Array.from(missing_words()), 'words');
+                const missing = Array.from(missing_words());
+                console.log("Missing Words", missing.length)
+                ListBoy.RenderTo(missing, 'words');
             }
         </script>
     </head>
