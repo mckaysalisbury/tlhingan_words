@@ -37,6 +37,8 @@
                     words[entry_name] = definition;
                 }
             }
+            const vowels = ['a', 'e', 'I', 'o', 'u']
+            const consonants = ['b', 'ch', 'D', 'gh', 'H', 'j', 'l', 'm', 'n', 'ng', 'p', 'q', 'Q', 'r', 'S', 't', 'tlh', 'v', 'w', 'y', "'"]
 
             const files = {
                 "b": "01",
@@ -105,6 +107,49 @@
                     // xhr.responseType = "document"; These aren't valid XML documents :(
                     xhr.send();
                 }
+            }
+            
+            const syllableWords = []
+
+            function* twoCharacterWords() {
+                for (const consonant of consonants) {
+                    for (const vowel of vowels) {
+                        yield consonant + vowel;
+                    }
+                }
+            }
+
+            function* threeCharacterWords() {
+                for (const leadingConsonant of consonants) {
+                    for (const vowel of vowels) {
+                        for (const closingConsonant of consonants) {
+                            yield leadingConsonant + vowel + closingConsonant;
+                        }
+                    }
+                }
+            }
+
+            function* fourCharacterWords() {
+                const extraPieces = ["w'", "y'", 'rgh']
+                for (const piece of extraPieces) {
+                    for (const word of twoCharacterWords()) {
+                        yield word + piece;
+                    }
+                }
+            }
+
+            function getAllSyllableWords() {
+                // <klingon-root-word> ::= <klingon-root-word-piece> | <klingon-root-word-piece><klingon-root-word>
+                // <klingon-root-word-piece> ::=
+                //      <consonant><vowel> |
+                //      <consonant><vowel><consonant> |
+                //      <consonant><vowel>"w" "'" |
+                //      <consonant><vowel>"y" "'" |
+                //      <consonant><vowel>"r" "gh"
+
+                syllableWords.push(...twoCharacterWords(), ...threeCharacterWords(), ...fourCharacterWords())
+                // return Array.from(twoCharacterWords())
+                // twoCharacterWords.reduce((array, value) => { syllableWords.push(value); return syllableWords }, syllableWords)
             }
         </script>
     </head>
