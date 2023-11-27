@@ -1,6 +1,20 @@
 <html>
     <head>
         <script src="https://github.mckaysalisbury.com/ListBoy/ListBoy.js"></script>
+        <style>
+            #status {
+                position: absolute;
+                right: 0;
+                bottom: 0;
+                color: lightgray;
+            }
+            .string-default {
+                float: left;
+            }
+            .string-default::after {
+                content: " ";  /* emspace */
+            }
+        </style>
         <script>
             const words = {};
             function parsePiece(xhr) {
@@ -37,6 +51,7 @@
                     words[entry_name] = definition;
                 }
             }
+
             const vowels = ['a', 'e', 'I', 'o', 'u']
             const consonants = ['b', 'ch', 'D', 'gh', 'H', 'j', 'l', 'm', 'n', 'ng', 'p', 'q', 'Q', 'r', 'S', 't', 'tlh', 'v', 'w', 'y', "'"]
 
@@ -76,10 +91,11 @@
                 // This is not thread safe, but it's good enough for what I need.
                 counts[counter]++;
                 document.getElementById('status').innerHTML = "";
-                ListBoy.RenderTo(counts, 'status');
+                // ListBoy.RenderTo(counts, 'status');
+                console.log("Status", counts)
             }
 
-            function display() {
+            function display_dictionary() {
                 document.getElementById('words').innerHTML = "";
                 ListBoy.RenderTo(words, "words");
             }
@@ -94,6 +110,7 @@
                         update_counter("downloaded");
                         const xml = parsePiece(xhr);
                         extractWords(xml);
+                        counts.words = Object.entries(words).length;
                         update_counter("processed");
                     };
 
@@ -107,8 +124,16 @@
                     // xhr.responseType = "document"; These aren't valid XML documents :(
                     xhr.send();
                 }
+                syllableWords.length = 0;
+                getAllSyllableWords();
+                counts.syllables = syllableWords.length;
             }
-            
+
+            //      <consonant><vowel> |
+            //      <consonant><vowel><consonant> |
+            //      <consonant><vowel>"w" "'" |
+            //      <consonant><vowel>"y" "'" |
+            //      <consonant><vowel>"r" "gh"
             const syllableWords = []
 
             function* twoCharacterWords() {
@@ -139,23 +164,32 @@
             }
 
             function getAllSyllableWords() {
-                // <klingon-root-word> ::= <klingon-root-word-piece> | <klingon-root-word-piece><klingon-root-word>
-                // <klingon-root-word-piece> ::=
-                //      <consonant><vowel> |
-                //      <consonant><vowel><consonant> |
-                //      <consonant><vowel>"w" "'" |
-                //      <consonant><vowel>"y" "'" |
-                //      <consonant><vowel>"r" "gh"
-
                 syllableWords.push(...twoCharacterWords(), ...threeCharacterWords(), ...fourCharacterWords())
-                // return Array.from(twoCharacterWords())
-                // twoCharacterWords.reduce((array, value) => { syllableWords.push(value); return syllableWords }, syllableWords)
+            }
+
+            function* missing_words() {
+                for(const possible of syllableWords) {
+                    if (possible in words) {
+                        // do nothing?
+                    } else {
+                        yield possible;
+                    }
+                }
+            }
+
+            function display_missing() {
+                document.getElementById('words').innerHTML = "";
+                ListBoy.RenderTo(Array.from(missing_words()), 'words');
             }
         </script>
     </head>
     <body>
-        <button onclick="processFiles();">Process</button>
-        <button onclick="display();">Display</button>
+        <!-- <button onclick="processFiles();">Process</button> -->
+        <!-- <button onclick="display_dictionary();">Display Dictionary</button> -->
+        <button onclick="display_missing();">Display Missing Words</button>
         <div id="status"></div><div id="words"></div>
     </body>
+    <script>
+        processFiles();
+    </script>
 </html>
