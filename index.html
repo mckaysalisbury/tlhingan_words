@@ -104,29 +104,34 @@
                 counts.started = 0;
                 counts.downloaded = 0;
                 counts.processed = 0;
+                const promises = [];
                 for (const letter in files) {
                     const xhr = new XMLHttpRequest();
-                    xhr.onload = () => {
-                        update_counter("downloaded");
-                        const xml = parsePiece(xhr);
-                        extractWords(xml);
-                        counts.words = Object.entries(words).length;
-                        update_counter("processed");
-                    };
+                    promises.push(new Promise((resolve) => {
+                        xhr.onload = () => {
+                            update_counter("downloaded");
+                            const xml = parsePiece(xhr);
+                            extractWords(xml);
+                            counts.words = Object.entries(words).length;
+                            update_counter("processed");
+                            resolve();
+                        };
 
-                    xhr.onerror = () => {
-                        alert("Error while getting XML.");
-                    };
+                        xhr.onerror = () => {
+                            alert("Error while getting XML.");
+                        };
 
-                    const number = files[letter];
-                    xhr.open("GET", `https://raw.githubusercontent.com/De7vID/klingon-assistant-data/master/mem-${number}-${letter}.xml`, true);
-                    update_counter("started");
-                    // xhr.responseType = "document"; These aren't valid XML documents :(
-                    xhr.send();
+                        const number = files[letter];
+                        xhr.open("GET", `https://raw.githubusercontent.com/De7vID/klingon-assistant-data/master/mem-${number}-${letter}.xml`, true);
+                        update_counter("started");
+                        // xhr.responseType = "document"; These aren't valid XML documents :(
+                        xhr.send();
+                    }));
                 }
                 syllableWords.length = 0;
                 getAllSyllableWords();
                 counts.syllables = syllableWords.length;
+                Promise.all(promises).then(() => display_missing());
             }
 
             //      <consonant><vowel> |
@@ -188,7 +193,7 @@
     <body>
         <!-- <button onclick="processFiles();">Process</button> -->
         <!-- <button onclick="display_dictionary();">Display Dictionary</button> -->
-        <button onclick="display_missing();">Display Missing Words</button>
+        <!-- <button onclick="display_missing();">Display Missing Words</button> -->
         <div id="status"></div><div id="words"></div>
     </body>
     <script>
