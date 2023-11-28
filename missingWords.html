@@ -1,0 +1,57 @@
+<html>
+    <head>
+        <title>Possible one-syllable words that Maltz hasn't taught us yet</title>
+        <script src="https://github.mckaysalisbury.com/ListBoy/ListBoy.js"></script>
+        <script src="tlhIngan.js"></script>
+        <script src="dictionary.js"></script>
+        <script src="syllableWords.js"></script>
+        <style>
+            #status {
+                position: absolute;
+                right: 0;
+                bottom: 0;
+                color: lightgray;
+            }
+
+            .array {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(4em, 1fr));
+                gap: 0.5rem;
+            }
+
+            .string-default {
+                font-size: 1.5rem;
+            }
+        </style>
+        <script>
+            function display_dictionary() {
+                document.getElementById('words').innerHTML = "";
+                ListBoy.RenderTo(words, "words");
+            }
+
+            function* missing_words(dictionary) {
+                for(const possible of allPossibleSyllableWords()) {
+                    if (possible in dictionary) {
+                        // do nothing?
+                    } else {
+                        yield possible;
+                    }
+                }
+            }
+
+            function display_missing(dictionary) {
+                document.getElementById('words').innerHTML = "";
+                const missing = Array.from(missing_words(dictionary));
+                console.log("Missing Words", missing.length)
+                ListBoy.RenderTo(missing, 'words');
+            }
+        </script>
+    </head>
+    <body>
+        <h1>Possible one-syllable words that Maltz hasn't taught us yet</h1>
+        <div id="words"></div>
+    </body>
+    <script>
+        processFiles().then((dictionary) => display_missing(dictionary));
+    </script>
+</html>

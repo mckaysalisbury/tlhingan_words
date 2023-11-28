@@ -1,0 +1,86 @@
+<html>
+    <head>
+        <title>One-syllable Word Table</title>
+        <script src="https://github.mckaysalisbury.com/ListBoy/ListBoy.js"></script>
+        <script src="tlhIngan.js"></script>
+        <script src="dictionary.js"></script>
+        <!-- <script src="syllableWords.js"></script> -->
+        <script>
+            function makeTable(dictionary) {
+                const wordsTable = document.getElementById('words');
+                console.log(dictionary)
+                const header = document.createElement('tr');
+                wordsTable.appendChild(header);
+                const left = document.createElement('td');
+                header.appendChild(left)
+
+                topLetters = [""].concat(consonants, extraPieces);
+                leftLetters = consonants;
+                cellLetters = vowels;
+                for (const topLetter of topLetters) {
+                    const headerCell = document.createElement('td');
+                    headerCell.innerText = topLetter;
+                    header.appendChild(headerCell);
+                }
+                for (const leftLetter of leftLetters) {
+                    const row = document.createElement('tr');
+                    wordsTable.appendChild(row);
+                    const leftmostCell = document.createElement('td');
+                    row.appendChild(leftmostCell);
+                    leftmostCell.innerText = leftLetter;
+                    for (const topLetter of topLetters) {
+                        const cell = document.createElement('td');
+                        row.appendChild(cell);
+                        for (const cellLetter of cellLetters) {
+                            const cellWord = `${leftLetter}${cellLetter}${topLetter}`;
+                            const isInDictionary = cellWord in dictionary;
+                            const wordDiv = document.createElement('div');
+                            wordDiv.className = `isInDictionary${isInDictionary}`;
+                            cell.appendChild(wordDiv);
+
+                            const imgTag = document.createElement('img');
+                            wordDiv.innerHTML = `<span class='stack'>${cellLetter}</span>`;
+                            wordDiv.appendChild(imgTag);
+                            const titleText = cellWord + (isInDictionary ? " - " + dictionary[cellWord] : "")
+                            imgTag.setAttribute('title', titleText)
+                        }
+                    }
+                }
+            }
+        </script>
+        <style>
+            .isInDictionarytrue {
+                background-color: #afa;
+                width: 10px;
+                height: 1rem;
+                float: left;
+            }
+            .isInDictionaryfalse {
+                background-color: #ccc;
+                width: 10px;
+                height: 1rem;
+                float: left;
+            }
+            img {
+                content:url(data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==);
+                width: 10px;
+                height: 1rem;
+                position: absolute;
+            }
+            .stack {
+                position: absolute;
+                width:10px;
+                height: 1rem;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>All possible one-syllable Klingon words</h1>
+        <h2>and whether or not Maltz has taught us the word</h2>
+        <h3>Hover for the word</h3>
+        <table id="words"></table>
+    </body>
+    <script>
+        processFiles().then((dictionary) => makeTable(dictionary));
+    </script>
+</html>
