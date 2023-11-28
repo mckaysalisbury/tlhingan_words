@@ -4,30 +4,68 @@
         <script src="https://github.mckaysalisbury.com/ListBoy/ListBoy.js"></script>
         <script src="tlhIngan.js"></script>
         <script src="dictionary.js"></script>
-        <!-- <script src="syllableWords.js"></script> -->
+        <style>
+            .wordSquare {
+                width: 10px;
+                height: 1rem;
+                float: left;
+                padding: 0;
+            }
+            .isInDictionarytrue {
+                background-color: #afa;
+            }
+            .isInDictionaryfalse {
+                background-color: #ccc;
+            }
+            img {
+                width: 10px;
+                height: 1rem;
+                position: absolute;
+            }
+            .stack {
+                position: absolute;
+                width: 10px;
+                height: 1rem;
+            }
+            .top, .left {
+                text-align: center;
+            }
+            /* td {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(1em, 1fr));
+                gap: 0;
+            } */
+        </style>
         <script>
             function makeTable(dictionary) {
                 const wordsTable = document.getElementById('words');
                 console.log(dictionary)
-                const header = document.createElement('tr');
-                wordsTable.appendChild(header);
-                const left = document.createElement('td');
-                header.appendChild(left)
+                const top = document.createElement('tr');
+                wordsTable.appendChild(top);
+
+                const topLeft = document.createElement('td');
+                top.appendChild(topLeft)
 
                 topLetters = [""].concat(consonants, extraPieces);
                 leftLetters = consonants;
                 cellLetters = vowels;
                 for (const topLetter of topLetters) {
-                    const headerCell = document.createElement('td');
-                    headerCell.innerText = topLetter;
-                    header.appendChild(headerCell);
+                    const topmostCell = document.createElement('td');
+                    top.appendChild(topmostCell);
+                    const headerDiv = document.createElement('div');
+                    headerDiv.className = 'top'
+                    topmostCell.appendChild(headerDiv);
+                    headerDiv.innerText = topLetter;
                 }
                 for (const leftLetter of leftLetters) {
                     const row = document.createElement('tr');
                     wordsTable.appendChild(row);
                     const leftmostCell = document.createElement('td');
                     row.appendChild(leftmostCell);
-                    leftmostCell.innerText = leftLetter;
+                    const headerDiv = document.createElement('div');
+                    headerDiv.className = 'left'
+                    leftmostCell.appendChild(headerDiv);
+                    headerDiv.innerText = leftLetter;
                     for (const topLetter of topLetters) {
                         const cell = document.createElement('td');
                         row.appendChild(cell);
@@ -35,10 +73,12 @@
                             const cellWord = `${leftLetter}${cellLetter}${topLetter}`;
                             const isInDictionary = cellWord in dictionary;
                             const wordDiv = document.createElement('div');
-                            wordDiv.className = `isInDictionary${isInDictionary}`;
+                            wordDiv.classList.add(`isInDictionary${isInDictionary}`, 'wordSquare')
                             cell.appendChild(wordDiv);
 
                             const imgTag = document.createElement('img');
+                            imgTag.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
+
                             wordDiv.innerHTML = `<span class='stack'>${cellLetter}</span>`;
                             wordDiv.appendChild(imgTag);
                             const titleText = cellWord + (isInDictionary ? " - " + dictionary[cellWord] : "")
@@ -48,31 +88,6 @@
                 }
             }
         </script>
-        <style>
-            .isInDictionarytrue {
-                background-color: #afa;
-                width: 10px;
-                height: 1rem;
-                float: left;
-            }
-            .isInDictionaryfalse {
-                background-color: #ccc;
-                width: 10px;
-                height: 1rem;
-                float: left;
-            }
-            img {
-                content:url(data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==);
-                width: 10px;
-                height: 1rem;
-                position: absolute;
-            }
-            .stack {
-                position: absolute;
-                width:10px;
-                height: 1rem;
-            }
-        </style>
     </head>
     <body>
         <h1>All possible one-syllable Klingon words</h1>
