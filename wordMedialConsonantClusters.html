@@ -1,0 +1,175 @@
+<html>
+    <head>
+        <title>Word-Medial Consonant Clusters</title>
+        <script src="https://github.mckaysalisbury.com/ListBoy/ListBoy.js"></script>
+        <script src="tlhIngan.js"></script>
+        <script src="dictionary.js"></script>
+        <style>
+            .cellDiv {
+                height: 1rem;
+            }
+            .cellDiv6 {
+                height: 6rem;
+            }
+            .sizer {
+                height: 1rem;
+                background-color: lightgreen;
+            }
+
+            .cellDiv6 > .sizer {
+                height: 6rem;
+            }
+
+            .count {
+                position: relative;
+                display: block;
+                top: -1rem;
+                height: 0px;
+            }
+
+            .cellDiv6 > .count {
+                top: -6rem;
+            }
+
+            img {
+                position: relative;
+                top: -1rem;
+                width: 100%;
+                overflow: hidden;
+                height: 1rem;
+            }
+
+            .cellDiv6 > img {
+                top: -6rem;
+                height: 6rem;
+            }
+
+        </style>
+        <script>
+            const WORDS = "multiple words";
+            const SYLLABLE = "less than 2 vowels";
+            const OTHER = "other";
+            const extraGroups = [WORDS, SYLLABLE, OTHER];
+
+            function createCountingCellContents(cell, words, dictionary, muiltiplier = 2, cellDivClassName = 'cellDiv') {
+                const count = words.length;
+
+                const cellDiv = document.createElement('div');
+                cellDiv.className = cellDivClassName;
+                cell.appendChild(cellDiv);
+
+                const sizer = document.createElement('div');
+                sizer.style.width = count * muiltiplier;
+                sizer.className = 'sizer';
+                cellDiv.appendChild(sizer);
+
+                const textSpan = document.createElement('span');
+                textSpan.innerText = count;
+                textSpan.className = 'count'
+                cellDiv.appendChild(textSpan);
+
+                const imgTag = document.createElement('img');
+                imgTag.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
+                const titleText = words.map((word) => `${word} - ${dictionary[word]}`).join('\n')
+                imgTag.title = titleText;
+                cellDiv.appendChild(imgTag);
+            }
+
+            function groupLetters(dictionary) {
+                const groupings = {};
+                for (terminatingLetter of [""].concat(consonants, extraPieces)) {
+                    for (beginningLetter of consonants) {
+                        groupings[terminatingLetter + beginningLetter] = [];
+                    }
+                }
+                for (const group of extraGroups) {
+                    groupings[group] = [];
+                }
+
+                for (const word in dictionary) {
+                    if (word.includes(' ')) {
+                        groupings[WORDS].push(word)
+                    } else {
+                        // const matches = /[aeIou]([^aeIou]*)[aeIou]/.exec(word);
+                        const matches = [...word.matchAll(/[aeIou]([^aeIou]*)(?=[aeIou])/g)];
+                        if (matches.length === 0) {
+                            groupings[SYLLABLE].push(word);
+                        }
+                        else {
+                            for (const match of matches) {
+                                if (match[1] in groupings) {
+                                    groupings[match[1]].push(word);
+                                } else {
+                                    groupings[OTHER].push(word);
+                                }
+                            }
+                        }
+                    }
+                }
+                makeTable(dictionary, groupings)
+            }
+            function makeTable(dictionary, groupings) {
+                const wordsTable = document.getElementById('words');
+                console.log(groupings)
+                const top = document.createElement('tr');
+                wordsTable.appendChild(top);
+
+                const topLeft = document.createElement('td');
+                top.appendChild(topLeft)
+
+                leftLetters = [""].concat(consonants, extraPieces);
+                topLetters = consonants;
+                for (const topLetter of topLetters) {
+                    const topmostCell = document.createElement('td');
+                    top.appendChild(topmostCell);
+                    const headerDiv = document.createElement('div');
+                    headerDiv.className = 'top'
+                    topmostCell.appendChild(headerDiv);
+                    headerDiv.innerText = topLetter;
+                }
+                for (const leftLetter of leftLetters) {
+                    const row = document.createElement('tr');
+                    wordsTable.appendChild(row);
+                    const leftmostCell = document.createElement('td');
+                    row.appendChild(leftmostCell);
+                    const headerDiv = document.createElement('div');
+                    headerDiv.className = 'left'
+                    leftmostCell.appendChild(headerDiv);
+                    headerDiv.innerText = leftLetter;
+                    for (const topLetter of topLetters) {
+                        const cluster = leftLetter + topLetter;
+
+                        const cell = document.createElement('td');
+                        row.appendChild(cell);
+                        createCountingCellContents(cell, groupings[cluster], dictionary);
+                    }
+                }
+                for (const extraGroup of extraGroups) {
+                    const row = document.createElement('tr');
+                    wordsTable.appendChild(row);
+                    const leftmostCell = document.createElement('td');
+                    leftmostCell.colSpan = 3;
+                    row.appendChild(leftmostCell);
+                    const headerDiv = document.createElement('div');
+                    headerDiv.className = 'left'
+                    leftmostCell.appendChild(headerDiv);
+                    headerDiv.innerText = extraGroup;
+                    const cell = document.createElement('td');
+                    cell.colSpan = 40;
+                    row.appendChild(cell);
+                    createCountingCellContents(cell, groupings[extraGroup], dictionary, 0.333333, 'cellDiv6');
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <h1>Word-Medial Consonant Clusters</h1>
+        <h2>Area of the bar is relative frequency</h2>
+        <h3>Hover (or press and hold) for the words</h3>
+        <h4>(Currently only maps the first medial consonant cluster)</h4>
+        <table id="words"></table>
+    </body>
+    <script>
+        processFiles().then((dictionary) => groupLetters(dictionary));
+    </script>
+</html>
