@@ -51,6 +51,23 @@
             const OTHER = "other";
             const extraGroups = [WORDS, SYLLABLE, OTHER];
 
+            function excludeOptions() {
+                const checkboxes = document.getElementsByClassName('partsOfSpeechCheckbox');
+                const includeRules = Object.fromEntries(Array.prototype.map.call(checkboxes, (checkbox) => [checkbox.id, checkbox.checked]));
+                // document.getElementById()
+                return {
+                    shouldExclude: function(entry) {
+                        parts_of_speech = entry.part_of_speech.split(':').map((pos) => pos.split(',')).flat();
+                        for (const part_of_speech of parts_of_speech) {
+                            if (part_of_speech in includeRules && !includeRules[part_of_speech]) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                };
+            }
+
             function createCountingCellContents(cell, words, dictionary, muiltiplier = 2, cellDivClassName = 'cellDiv') {
                 const count = words.length;
 
@@ -70,12 +87,12 @@
 
                 const imgTag = document.createElement('img');
                 imgTag.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
-                const titleText = words.map((word) => `${word} - ${dictionary[word]}`).join('\n')
+                const titleText = words.map((word) => `${word} - ${dictionary[word].definition}`).join('\n')
                 imgTag.title = titleText;
                 cellDiv.appendChild(imgTag);
             }
 
-            function groupLetters(dictionary) {
+            function groupLetters() {
                 const groupings = {};
                 for (terminatingLetter of [""].concat(consonants, extraPieces)) {
                     for (beginningLetter of consonants) {
@@ -85,8 +102,11 @@
                 for (const group of extraGroups) {
                     groupings[group] = [];
                 }
-
+                const localExcludeOptions = excludeOptions();
                 for (const word in dictionary) {
+                    if (localExcludeOptions.shouldExclude(dictionary[word])) {
+                        continue;
+                    }
                     if (word.includes(' ')) {
                         groupings[WORDS].push(word)
                     } else {
@@ -106,10 +126,11 @@
                         }
                     }
                 }
-                makeTable(dictionary, groupings)
+                makeTable(groupings)
             }
-            function makeTable(dictionary, groupings) {
+            function makeTable(groupings) {
                 const wordsTable = document.getElementById('words');
+                wordsTable.innerHTML = "";
                 console.log(groupings)
                 const top = document.createElement('tr');
                 wordsTable.appendChild(top);
@@ -160,15 +181,29 @@
                     createCountingCellContents(cell, groupings[extraGroup], dictionary, 0.333333, 'cellDiv6');
                 }
             }
+
+            var dictionary = null;
+
+            function initialize(freshDictionary) {
+                dictionary = freshDictionary;
+                groupLetters();
+            }
         </script>
     </head>
     <body>
         <h1>Word-Medial Consonant Clusters</h1>
         <h2>Area of the bar is relative frequency</h2>
         <h3>Hover (or press and hold) for the words</h3>
+        <input type="checkbox" class="partsOfSpeechCheckbox" id="sen" name="sen" onchange="groupLetters()"/><label for ="sen">Include Sentences</label>
+        <input type="checkbox" class="partsOfSpeechCheckbox" id="deriv" name="deriv" onchange="groupLetters()"/><label for ="deriv">Include Derivatives</label>
+        <input type="checkbox" class="partsOfSpeechCheckbox" id="alt" name="alt" onchange="groupLetters()" checked="true"/><label for ="alt">Include Alternates</label>
+        <input type="checkbox" class="partsOfSpeechCheckbox" id="terran" name="terran" onchange="groupLetters()" checked="true"/><label for ="terran">Include Terran terms</label>
+        <input type="checkbox" class="partsOfSpeechCheckbox" id="place" name="place" onchange="groupLetters()" checked="true"/><label for ="place">Include place terms</label>
+        <input type="checkbox" class="partsOfSpeechCheckbox" id="fic" name="fic" onchange="groupLetters()" checked="true"/><label for ="fic">Include fictional terms</label>
+        <input type="checkbox" class="partsOfSpeechCheckbox" id="excl" name="excl" onchange="groupLetters()" checked="true"/><label for ="excl">Include Exclamations</label>
         <table id="words"></table>
     </body>
     <script>
-        processFiles().then((dictionary) => groupLetters(dictionary));
+        dictionaryAsync().then((dictionary) => initialize(dictionary));
     </script>
 </html>

@@ -1,11 +1,3 @@
-const counts = {};
-
-function update_counter(counter) {
-    // This is not thread safe, but it's good enough for what I need.
-    counts[counter]++;
-    console.log("Status", counts)
-}
-
 const files = {
     "b": "01",
     "ch": "02",
@@ -39,69 +31,75 @@ const files = {
 }
 
 const words = {};
-function parsePiece(xhr) {
+function parsePiece(documentContents) {
     // Even still, It should be this easy
     // const document = xhr.responseXML;
     // But they're not valid XML documents, so we need to make it work
     const parser = new DOMParser();
-    const xml = parser.parseFromString(`<document>${xhr.responseText}</document>`, "text/xml"); // So I have to wrap it
+    const xml = parser.parseFromString(`<document>${documentContents}</document>`, "text/xml"); // So I have to wrap it
     return xml;
 }
 
-function processFiles() {
-    counts.started = 0;
-    counts.downloaded = 0;
-    counts.processed = 0;
-    const promises = [];
-    for (const letter in files) {
-        const xhr = new XMLHttpRequest();
-        promises.push(new Promise((resolve) => {
-            xhr.onload = () => {
-                update_counter("downloaded");
-                const xml = parsePiece(xhr);
-                extractWords(xml);
-                counts.words = Object.entries(words).length;
-                update_counter("processed");
-                resolve();
-            };
+var filePromises = []
 
-            xhr.onerror = () => {
-                alert("Error while getting XML.");
-            };
+function allFilesAsync() {
+    if (filePromises.length == 0) {
+        filePromises = Object.entries(files).map(([letter, number]) => {
+            const xhr = new XMLHttpRequest();
+            return new Promise((resolve) => {
+                xhr.onload = () => {
+                    resolve(xhr.responseText)
+                }
 
-            const number = files[letter];
-            xhr.open("GET", `https://raw.githubusercontent.com/De7vID/klingon-assistant-data/master/mem-${number}-${letter}.xml`, true);
-            update_counter("started");
-            // xhr.responseType = "document"; These aren't valid XML documents :(
-            xhr.send();
-        }));
+                xhr.onerror = () => {
+                    alert("Error while getting XML.");
+                };
+
+                const number = files[letter];
+                xhr.open("GET", `https://raw.githubusercontent.com/De7vID/klingon-assistant-data/master/mem-${number}-${letter}.xml`, true);
+                // xhr.responseType = "document"; These aren't valid XML documents :(
+                xhr.send();
+            });
+        })
     }
-    return Promise.all(promises).then(() => words)
+    return filePromises;
 }
 
+function allParsedFilesAsync() {
+    return allFilesAsync().map(async (promise) => parsePiece(await promise))
+}
 
-function extractWords(xml) {
+function extractEntries(xml) {
     const tables = xml.getElementsByTagName("table");
-    for (const table of tables) {
+    const columnsWeCareAbout = ['entry_name', 'definition', 'part_of_speech']
+    // return Array.from(tables).map((table) => {
+    return Array.prototype.map.call(tables, (table) => {
         const columns = table.getElementsByTagName("column");
-        let entry_name = null;
-        let definition = null;
-        for (column of columns) {
+        const object = {};
+        for (const column of columns) {
             const name = column.getAttribute("name");
-            switch (name) {
-                case "entry_name":
-                    entry_name = column.getInnerHTML();
-                    break;
-                case "definition":
-                    definition = column.getInnerHTML();
-                    break;
-                default:
-                    // do nothing, we don't care about this
+            if (columnsWeCareAbout.includes(name)) {
+                object[name] = column.getInnerHTML();
             }
-            // if (entry_name && definition) { // optimization
+            // if (columnsWeCareAbout.every((column) => column in object)) { // optimization?
             //     break;
             // }
         }
-        words[entry_name] = definition;
+        return object;
+    });
+}
+
+async function allEntriesAsync() {
+    return (await Promise.all(allParsedFilesAsync())).map(extractEntries).flat();
+}
+
+let _dictionary = null;
+
+async function dictionaryAsync() {
+    if (_dictionary === null) {
+        const entries = await allEntriesAsync();
+        console.log(entries.length, "entries")
+        _dictionary = Object.fromEntries(entries.map((entry) => [entry.entry_name, entry]));
     }
+    return _dictionary;
 }
