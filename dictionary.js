@@ -72,7 +72,6 @@ function allParsedFilesAsync() {
 function extractEntries(xml) {
     const tables = xml.getElementsByTagName("table");
     const columnsWeCareAbout = ['entry_name', 'definition', 'part_of_speech']
-    // return Array.from(tables).map((table) => {
     return Array.prototype.map.call(tables, (table) => {
         const columns = table.getElementsByTagName("column");
         const object = {};
