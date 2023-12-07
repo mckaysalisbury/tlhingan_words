@@ -79,7 +79,7 @@ function extractEntries(xml) {
         for (const column of columns) {
             const name = column.getAttribute("name");
             if (columnsWeCareAbout.includes(name)) {
-                object[name] = column.getInnerHTML();
+                object[name] = column.innerHTML;
             }
             // if (columnsWeCareAbout.every((column) => column in object)) { // optimization?
             //     break;
