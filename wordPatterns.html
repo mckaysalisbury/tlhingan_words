@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>Word-Medial Consonant Clusters</title>
+        <title>Word-patterns</title>
         <script src="https://github.mckaysalisbury.com/ListBoy/ListBoy.js"></script>
         <script src="tlhIngan.js"></script>
         <script src="dictionary.js"></script>
@@ -47,14 +47,40 @@
         </style>
         <script>
             const WORDS = "multiple words";
-            const SYLLABLE = "less than 2 vowels";
+            const NO_MATCH = "Doesn't match the pattern.";
             const OTHER = "other";
-            const extraGroups = [WORDS, SYLLABLE, OTHER];
+            const extraGroups = [WORDS, NO_MATCH, OTHER];
+            const patterns = { 
+                'wordMedial': {
+                    expression: /[aeIou]([^aeIou]*)(?=[aeIou])/g,
+                    extractor: (match) => splitMedial(match[1]),
+                    leftLetters: syllableTerminatingConsonantClusters,
+                    topLetters: consonants,
+                },
+                'vowel': {
+                    expression: /([aeIou])[^aeIou]*([aeIou])/g,
+                    extractor: (match) => [match[1], match[2]],
+                    leftLetters: vowels,
+                    topLetters: vowels,
+                }
+            };
+
+            function splitMedial(cluster) {
+                for (const consonant of consonants) {
+                    if (cluster.endsWith(consonant)) {
+                        const chuv = cluster.substring(0, cluster.length - consonant.length)
+                        if (syllableTerminatingConsonantClusters.includes(chuv)) {
+                            return [chuv, consonant]
+                        } else {
+                            return OTHER;
+                        }
+                    }
+                }
+            }
 
             function excludeOptions() {
                 const checkboxes = document.getElementsByClassName('partsOfSpeechCheckbox');
                 const includeRules = Object.fromEntries(Array.prototype.map.call(checkboxes, (checkbox) => [checkbox.id, checkbox.checked]));
-                // document.getElementById()
                 return {
                     shouldExclude: function(entry) {
                         parts_of_speech = entry.part_of_speech.split(':').map((pos) => pos.split(',')).flat();
@@ -93,10 +119,13 @@
             }
 
             function groupLetters() {
+                const patternSelect = document.getElementById('pattern');
+                const pattern = patterns[patternSelect.selectedOptions[0].value];
+                const expression = pattern.expression;
                 const groupings = {};
-                for (terminatingLetter of [""].concat(consonants, extraPieces)) {
-                    for (beginningLetter of consonants) {
-                        groupings[terminatingLetter + beginningLetter] = [];
+                for (const leftLetter of pattern.leftLetters) {
+                    for (const topLetter of pattern.topLetters) {
+                        groupings[[leftLetter, topLetter]] = [];
                     }
                 }
                 for (const group of extraGroups) {
@@ -110,15 +139,15 @@
                     if (word.includes(' ')) {
                         groupings[WORDS].push(word)
                     } else {
-                        // const matches = /[aeIou]([^aeIou]*)[aeIou]/.exec(word);
-                        const matches = [...word.matchAll(/[aeIou]([^aeIou]*)(?=[aeIou])/g)];
+                        const matches = [...word.matchAll(expression)];
                         if (matches.length === 0) {
-                            groupings[SYLLABLE].push(word);
+                            groupings[NO_MATCH].push(word);
                         }
                         else {
                             for (const match of matches) {
-                                if (match[1] in groupings) {
-                                    groupings[match[1]].push(word);
+                                const letters = pattern.extractor(match)
+                                if (letters in groupings) {
+                                    groupings[letters].push(word);
                                 } else {
                                     groupings[OTHER].push(word);
                                 }
@@ -126,21 +155,19 @@
                         }
                     }
                 }
-                makeTable(groupings)
+                makeTable(groupings, pattern)
             }
-            function makeTable(groupings) {
+            function makeTable(groupings, pattern) {
+                console.log(groupings)
                 const wordsTable = document.getElementById('words');
                 wordsTable.innerHTML = "";
-                console.log(groupings)
                 const top = document.createElement('tr');
                 wordsTable.appendChild(top);
 
                 const topLeft = document.createElement('td');
                 top.appendChild(topLeft)
 
-                leftLetters = [""].concat(consonants, extraPieces);
-                topLetters = consonants;
-                for (const topLetter of topLetters) {
+                for (const topLetter of pattern.topLetters) {
                     const topmostCell = document.createElement('td');
                     top.appendChild(topmostCell);
                     const headerDiv = document.createElement('div');
@@ -148,7 +175,7 @@
                     topmostCell.appendChild(headerDiv);
                     headerDiv.innerText = topLetter;
                 }
-                for (const leftLetter of leftLetters) {
+                for (const leftLetter of pattern.leftLetters) {
                     const row = document.createElement('tr');
                     wordsTable.appendChild(row);
                     const leftmostCell = document.createElement('td');
@@ -157,19 +184,20 @@
                     headerDiv.className = 'left'
                     leftmostCell.appendChild(headerDiv);
                     headerDiv.innerText = leftLetter;
-                    for (const topLetter of topLetters) {
-                        const cluster = leftLetter + topLetter;
+                    for (const topLetter of pattern.topLetters) {
+                        const entry = [leftLetter, topLetter];
 
                         const cell = document.createElement('td');
                         row.appendChild(cell);
-                        createCountingCellContents(cell, groupings[cluster], dictionary);
+                        createCountingCellContents(cell, groupings[entry], dictionary);
                     }
                 }
+                const extraTable = document.getElementById('extra');
+                extraTable.innerHTML = "";
                 for (const extraGroup of extraGroups) {
                     const row = document.createElement('tr');
-                    wordsTable.appendChild(row);
+                    extraTable.appendChild(row);
                     const leftmostCell = document.createElement('td');
-                    leftmostCell.colSpan = 3;
                     row.appendChild(leftmostCell);
                     const headerDiv = document.createElement('div');
                     headerDiv.className = 'left'
@@ -191,9 +219,13 @@
         </script>
     </head>
     <body>
-        <h1>Word-Medial Consonant Clusters</h1>
+        <h1>Word Patterns</h1>
         <h2>Area of the bar is relative frequency</h2>
         <h3>Hover (or press and hold) for the words</h3>
+        <select name="pattern" id="pattern" onchange="groupLetters()">
+            <option value="wordMedial" selected="true">Word-medial consonant patterns</option>
+            <option value="vowel">Multiple vowels in a word</option>
+        </select>
         <input type="checkbox" class="partsOfSpeechCheckbox" id="sen" name="sen" onchange="groupLetters()"/><label for ="sen">Include Sentences</label>
         <input type="checkbox" class="partsOfSpeechCheckbox" id="deriv" name="deriv" onchange="groupLetters()"/><label for ="deriv">Include Derivatives</label>
         <input type="checkbox" class="partsOfSpeechCheckbox" id="alt" name="alt" onchange="groupLetters()" checked="true"/><label for ="alt">Include Alternates</label>
@@ -202,6 +234,7 @@
         <input type="checkbox" class="partsOfSpeechCheckbox" id="fic" name="fic" onchange="groupLetters()" checked="true"/><label for ="fic">Include fictional terms</label>
         <input type="checkbox" class="partsOfSpeechCheckbox" id="excl" name="excl" onchange="groupLetters()" checked="true"/><label for ="excl">Include Exclamations</label>
         <table id="words"></table>
+        <table id="extra"></table>
     </body>
     <script>
         dictionaryAsync().then((dictionary) => initialize(dictionary));
