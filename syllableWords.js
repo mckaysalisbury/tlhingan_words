@@ -1,4 +1,3 @@
-
 const syllableWords = []
 
 //      <consonant><vowel> |
@@ -6,6 +5,8 @@ const syllableWords = []
 //      <consonant><vowel>"w" "'" |
 //      <consonant><vowel>"y" "'" |
 //      <consonant><vowel>"r" "gh"
+
+// But not "ow" or "uw"
 
 function* twoCharacterWords() {
     for (const consonant of consonants) {
@@ -19,7 +20,9 @@ function* threeCharacterWords() {
     for (const leadingConsonant of consonants) {
         for (const vowel of vowels) {
             for (const closingConsonant of consonants) {
-                yield leadingConsonant + vowel + closingConsonant;
+                if (isValidCombination(vowel, closingConsonant)) {
+                    yield leadingConsonant + vowel + closingConsonant;
+                }
             }
         }
     }
@@ -28,7 +31,9 @@ function* threeCharacterWords() {
 function* fourCharacterWords() {
     for (const piece of extraPieces) {
         for (const word of twoCharacterWords()) {
-            yield word + piece;
+            if (isValidCombination(word, piece)) {
+                yield word + piece;
+            }
         }
     }
 }

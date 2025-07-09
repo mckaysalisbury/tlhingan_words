@@ -65,19 +65,21 @@
                         const cell = document.createElement('td');
                         row.appendChild(cell);
                         for (const cellLetter of cellLetters) {
-                            const cellWord = `${leftLetter}${cellLetter}${topLetter}`;
-                            const isInDictionary = cellWord in dictionary;
-                            const wordDiv = document.createElement('div');
-                            wordDiv.classList.add(`isInDictionary${isInDictionary}`, 'wordSquare')
-                            cell.appendChild(wordDiv);
+                            if (isValidCombination(cellLetter, topLetter)) {
+                                const cellWord = `${leftLetter}${cellLetter}${topLetter}`;
+                                const isInDictionary = cellWord in dictionary;
+                                const wordDiv = document.createElement('div');
+                                wordDiv.classList.add(`isInDictionary${isInDictionary}`, 'wordSquare')
+                                cell.appendChild(wordDiv);
 
-                            const imgTag = document.createElement('img');
-                            imgTag.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
+                                const imgTag = document.createElement('img');
+                                imgTag.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
 
-                            wordDiv.innerHTML = `<span class='stack'>${cellLetter}</span>`;
-                            wordDiv.appendChild(imgTag);
-                            const titleText = cellWord + (isInDictionary ? " - " + dictionary[cellWord].definition : "")
-                            imgTag.setAttribute('title', titleText)
+                                wordDiv.innerHTML = `<span class='stack'>${cellLetter}</span>`;
+                                wordDiv.appendChild(imgTag);
+                                const titleText = cellWord + (isInDictionary ? " - " + dictionary[cellWord].definition : "")
+                                imgTag.setAttribute('title', titleText)
+                            }
                         }
                     }
                 }
