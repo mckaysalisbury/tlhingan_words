@@ -77,7 +77,7 @@
 
                                 wordDiv.innerHTML = `<span class='stack'>${cellLetter}</span>`;
                                 wordDiv.appendChild(imgTag);
-                                const titleText = cellWord + (isInDictionary ? " - " + dictionary[cellWord].definition : "")
+                                const titleText = cellWord + (isInDictionary ? ":\n" + (dictionary[cellWord].map(entry => entry.definition).join("\n")) : "")
                                 imgTag.setAttribute('title', titleText)
                             }
                         }

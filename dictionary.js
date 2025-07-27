@@ -98,7 +98,13 @@ async function dictionaryAsync() {
     if (_dictionary === null) {
         const entries = await allEntriesAsync();
         console.log(entries.length, "entries")
-        _dictionary = Object.fromEntries(entries.map((entry) => [entry.entry_name, entry]));
+        _dictionary = entries.reduce((dictionary, entry) => {
+            if (!(entry.entry_name in dictionary)) {
+                dictionary[entry.entry_name] = [];
+            }
+            dictionary[entry.entry_name].push(entry);
+            return dictionary;
+        }, {});
     }
     return _dictionary;
 }
